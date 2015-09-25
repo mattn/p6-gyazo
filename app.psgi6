@@ -40,7 +40,7 @@ sub app($env) {
         rename $image.path, "images/{$md5}.png";
         return [200, ['Content-Type' => 'text/html; charset=UTF-8'], ["{$req.base}{$md5}.png".encode("utf-8")]];
     }
-    if ($req.path-info ~~ m{^^ '/' (\w+ '.png')}) {
+    if ($req.path-info ~~ m{^^ '/' (\w+ '.png') $$}) {
         return [200, ['Content-Type' => 'image/png'], [slurp("images/{$0}", :bin)]];
     }
     return [200, ['Content-Type' => 'text/html; charset=UTF-8'], [$page]];
