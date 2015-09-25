@@ -38,12 +38,18 @@ sub app($env) {
         my $image = $req.uploads.values.[0];
         my $md5 = Digest::MD5.md5_hex(slurp($image.path, :bin));
         rename $image.path, "images/{$md5}.png";
-        return [200, ['Content-Type' => 'text/html; charset=UTF-8'], ["{$req.base}{$md5}.png".encode("utf-8")]];
+        return [200, ['Content-Type' => 'text/html; charset=UTF-8'], ["{$req.base}{$md5}.png".encode('utf-8')]];
     }
-    if ($req.path-info ~~ m{^^ '/' (\w+ '.png') $$}) {
-        return [200, ['Content-Type' => 'image/png'], [slurp("images/{$0}", :bin)]];
+    if $req.path-info eq '/' {
+        return [200, ['Content-Type' => 'text/html; charset=UTF-8'], [$page]];
     }
-    return [200, ['Content-Type' => 'text/html; charset=UTF-8'], [$page]];
+    if $req.path-info ~~ m{^^ '/' (\w+ '.png') $$} {
+        my $content = try slurp("images/{$0}", :bin);
+        if $content {
+            return [200, ['Content-Type' => 'image/png'], [$content]];
+        }
+    }
+    return [404, ['Content-Type' => 'text/plain'], ["Not Found".encode("utf-8")]];
 }
 
 # vim:set ft=perl6 et:
