@@ -1,0 +1,49 @@
+use v6;
+
+use Crust::Request;
+use Digest::MD5;
+
+my $page = q:heredoc/END/.encode('utf-8');
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>俺ぎゃぞ</title>
+    <link href='http://fonts.googleapis.com/css?family=Skranji' rel='stylesheet' type='text/css'>
+<style type="text/css">
+#content {
+    text-align: center;
+}
+.big {
+    font-family: 'Skranji', cursive;
+    font-size: 170px;
+}
+.small {
+    font-family: 'Skranji', cursive;
+    font-size: 70px;
+}
+</style>
+</head>
+<body>
+    <div id="content">
+        <span class="big">OreGyazo</span><br />
+    <div>
+</body>
+</html>
+END
+
+sub app($env) {
+    my $req = Crust::Request.new($env);
+    if $req.method eq 'POST' {
+        my $image = $req.uploads.values.[0];
+        my $md5 = Digest::MD5.md5_hex(slurp($image.path, :bin));
+        rename $image.path, "images/{$md5}.png";
+        return [200, ['Content-Type' => 'text/html; charset=UTF-8'], ["{$req.base}{$md5}.png".encode("utf-8")]];
+    }
+    if ($req.path-info ~~ m{^^ '/' (\w+ '.png')}) {
+        return [200, ['Content-Type' => 'image/png'], [slurp("images/{$0}", :bin)]];
+    }
+    return [200, ['Content-Type' => 'text/html; charset=UTF-8'], [$page]];
+}
+
+# vim:set ft=perl6 et:
